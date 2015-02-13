@@ -1,12 +1,16 @@
 #!/bin/bash
 
 _printf() {
+
+  # only print if $silent is unset
   if [ -z "$silent" ]; then
     printf "$@"
   fi
+
 }
 
 _usage() {
+
   printf "Usage: $0"
   printf " [-i input_dir]"
   printf " [-I input_ext]"
@@ -14,14 +18,17 @@ _usage() {
   printf " [-O output_ext]"
   printf " [-s]"
   printf " -- run_cmd\n"
+
 }
 
 _error() {
+
   printf "$0: $1\n"
   if [ -n "$2" ]; then
     _usage
   fi
   exit 1
+
 }
 
 _normalise_dir() {
