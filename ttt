@@ -106,7 +106,7 @@ while [ "$#" -gt 0 ]; do
           run_cmd="$2"
           shift
         else
-          _error "$1: invalid option" 1
+          run_cmd="$1"
         fi
         ;;
     esac
