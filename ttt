@@ -1,110 +1,223 @@
 #!/bin/bash
 
-# exit if no run command
-if [ "$#" -lt 1 ]; then
-  echo "Usage: $0 run_command"
+_printf() {
+  if [ -z "$silent" ]; then
+    printf "$@"
+  fi
+}
+
+_usage() {
+  printf "Usage: $0"
+  printf " [-i input_dir]"
+  printf " [-I input_ext]"
+  printf " [-o output_dir]"
+  printf " [-O output_ext]"
+  printf " [-s]"
+  printf " -- run_cmd\n"
+}
+
+_error() {
+  printf "$0: $1\n"
+  if [ -n "$2" ]; then
+    _usage
+  fi
   exit 1
+}
+
+_normalise_dir() {
+
+  # set to the default if unset
+  local dir=${1:-"$2"}
+
+  # strip the trailing '/'
+  printf "${dir%/}"
+
+}
+
+_normalise_ext() {
+
+  # set to the default if unset
+  if [ -z "$1" ]; then
+    printf ""
+  else
+    printf ".${1#.}"
+  fi
+
+}
+
+not_ok() {
+
+  local err="$3"
+  _printf "not ok $1 - $2\n  ---\n  error: "
+
+  # check if $err spans multiple lines
+  if [ $(echo "$err" | wc -l) -gt 1 ]; then
+    err=${err/	/  }
+    err=${err/
+/
+    }
+    _printf "|\n    $err\n";
+  else
+    _printf "'$err'\n"
+  fi
+  _printf "  ...\n"
+
+}
+
+# parse command line arguments
+while [ "$#" -gt 0 ]; do
+
+  # if $run_cmd is still unset
+  if [ -z "$run_cmd" ]; then
+
+    case "$1" in
+      # flag options with value
+      -i | -I | -o | -O | -a)
+        # check that a value was specified after the flag
+        if [ -z "$2" ] || [[ "$2" == -* ]]; then
+          _error "option $1 expects a value"
+        fi
+        case "$1" in
+          -i) input_dir="$2";;
+          -I) input_ext="$2";;
+          -o) output_dir="$2";;
+          -O) output_ext="$2";;
+          -a) actual_dir="$2";;
+        esac
+        shift
+        ;;
+      # flag options without value
+      -s)
+        silent=1
+        ;;
+      # non-flag options
+      *)
+        if [ "$1" == "--" ]; then
+          if [ -z "$2" ]; then
+            _error "need a run command" 1
+          fi
+          run_cmd="$2"
+          shift
+        else
+          _error "$1: invalid option" 1
+        fi
+        ;;
+    esac
+
+  else
+    run_cmd="$run_cmd $1"
+  fi
+
+  shift
+
+done
+
+# exit if no run command
+if [ -z "$run_cmd" ]; then
+  _error "need a run command" 1
 fi
 
-# input, expected output and actual output directories
-in_dir="in"
-out_dir="out"
-actual_dir="actual"
+# normalise options
+input_dir=$(_normalise_dir "$input_dir" "input")
+input_ext=$(_normalise_ext "$input_ext")
+output_dir=$(_normalise_dir "$output_dir" "output")
+output_ext=$(_normalise_ext "$output_ext")
+actual_dir=$(_normalise_dir "$actual_dir" "actual")
+
+# exit if $input_dir or $output_dir not found
+if [ ! -d "$input_dir" ]; then
+  _error "$input_dir: no such directory"
+fi
+if [ ! -d "$output_dir" ]; then
+  _error "$output_dir: no such directory"
+fi
 
 # empty $actual_dir
 rm -rf "$actual_dir"
 mkdir -p "$actual_dir"
 
 # print TAP version
-echo "TAP version 13"
+_printf "TAP version 13\n"
 
-# store input file names in $in_files
+# store input file names in $input_files
 num_test=0
-for in_file in "$in_dir"/*; do
-  if [ -f "$in_file" ]; then
-    in_files["$num_test"]="$in_file"
+for input_file in "$input_dir"/*"$input_ext"; do
+
+  # only include files
+  if [ -f "$input_file" ]; then
+    input_files["$num_test"]="$input_file"
     ((num_test++))
   fi
+
 done
 
 # print TAP plan
-echo "1..$num_test"
+_printf "1..$num_test\n"
 
-# helper function for formatting a failing test result
-not_ok() {
-
-  err="$3"
-  printf "not ok $1 - $2\n  ---\n  error: "
-
-  # check if $err spans multiple lines
-  if [ $(echo "$err" | wc -l) -gt 1 ]; then
-    err=${3/	/  }
-    err=${err/
-/
-    }
-    printf "|\n    $err\n";
-  else
-    echo "'$err'"
-  fi
-
-}
-
-# count number of passing tests
+# count passing tests
 num_pass=0
 
-# counter for numbering tests (starts from 1)
+# counter for numbering tests
 i=1
 
-# iterate over input file names in the $in_files array
-for in_file in "${in_files[@]}"; do
+# iterate over input file names in the $input_files array
+for input_file in "${input_files[@]}"; do
 
-  # test name, expected output file and actual output file
-  name=$(basename "$in_file")
-  out_file="$out_dir"/"$name"
-  actual_file="$actual_dir"/"$name"
+  # resolve $input_basename and $test_name
+  input_basename=$(basename "$input_file")
+  test_name=${input_basename%.*}
 
-  # redirect `stderr` to `stdout`, and `stdout` to $actual
-  err=$("$@" < "$in_file" 2>&1 >| "$actual_file")
+  # resolve $output_file and $actual_file
+  if [ -n "$output_ext" ]; then
+    output_basename="$test_name""$output_ext"
+  else
+    output_basename="$input_basename"
+  fi
+  output_file="$output_dir"/"$output_basename"
+  actual_file="$actual_dir"/"$output_basename"
+
+  # redirect `stderr` to `stdout`, and `stdout` to $actual_file
+  err=$(eval "$run_cmd" < "$input_file" 2>&1 >| "$actual_file")
 
   # check if $err is empty
   if [ -z "$err" ]; then
 
-    # check if $out_file exists
-    if [ -f "$out_file" ]; then
+    # check if $output_file exists
+    if [ -f "$output_file" ]; then
 
       # compare expected output with actual output
-      cmp_result=$(cmp "$out_file" "$actual_file")
+      cmp_result=$(cmp "$output_file" "$actual_file" 2>&1)
 
       # check if $cmp_result is empty
       if [ -z "$cmp_result" ]; then
-        printf "ok $1 - $2\n"
+        _printf "ok $i - $test_name\n"
         ((num_pass++))
       else
-        not_ok "$i" "$name" "cmp: $cmp_result"
+        not_ok "$i" "$test_name" "$cmp_result"
       fi
 
     else
-      not_ok "$i" "$name" "$out_file: no such file"
+      not_ok "$i" "$test_name" "$output_file: no such file"
     fi
 
   else
-    not_ok "$i" "$name" "$err"
+    not_ok "$i" "$test_name" "$err"
   fi
 
-  # increment the counter
+  # increment counter
   ((i++))
 
 done
 
-# count number of failing tests
+# count failing tests
 num_fail=$((num_test - num_pass))
 
 # print result summary
-echo "# tests $num_test"
-echo "# pass  $num_pass"
-echo "# fail  $num_fail"
+_printf "# tests $num_test\n"
+_printf "# pass  $num_pass\n"
+_printf "# fail  $num_fail\n"
 
-# exit with a non-zero exit code if some tests failed
+# exit with code 1 if some tests failed
 if [ "$num_fail" -ne 0 ]; then
   exit 1
 fi
