@@ -1,0 +1,7 @@
+language: sh
+
+before_script:
+  - chmod +x ttt
+
+script:
+  - cd test && sh vendor/roundup.sh

@@ -1,0 +1,110 @@
+#!/bin/bash
+
+# exit if no run command
+if [ "$#" -lt 1 ]; then
+  echo "Usage: $0 run_command"
+  exit 1
+fi
+
+# input, expected output and actual output directories
+in_dir="in"
+out_dir="out"
+actual_dir="actual"
+
+# empty $actual_dir
+rm -rf "$actual_dir"
+mkdir -p "$actual_dir"
+
+# print TAP version
+echo "TAP version 13"
+
+# store input file names in $in_files
+num_test=0
+for in_file in "$in_dir"/*; do
+  if [ -f "$in_file" ]; then
+    in_files["$num_test"]="$in_file"
+    ((num_test++))
+  fi
+done
+
+# print TAP plan
+echo "1..$num_test"
+
+# helper function for formatting a failing test result
+not_ok() {
+
+  err="$3"
+  printf "not ok $1 - $2\n  ---\n  error: "
+
+  # check if $err spans multiple lines
+  if [ $(echo "$err" | wc -l) -gt 1 ]; then
+    err=${3/	/  }
+    err=${err/
+/
+    }
+    printf "|\n    $err\n";
+  else
+    echo "'$err'"
+  fi
+
+}
+
+# count number of passing tests
+num_pass=0
+
+# counter for numbering tests (starts from 1)
+i=1
+
+# iterate over input file names in the $in_files array
+for in_file in "${in_files[@]}"; do
+
+  # test name, expected output file and actual output file
+  name=$(basename "$in_file")
+  out_file="$out_dir"/"$name"
+  actual_file="$actual_dir"/"$name"
+
+  # redirect `stderr` to `stdout`, and `stdout` to $actual
+  err=$("$@" < "$in_file" 2>&1 >| "$actual_file")
+
+  # check if $err is empty
+  if [ -z "$err" ]; then
+
+    # check if $out_file exists
+    if [ -f "$out_file" ]; then
+
+      # compare expected output with actual output
+      cmp_result=$(cmp "$out_file" "$actual_file")
+
+      # check if $cmp_result is empty
+      if [ -z "$cmp_result" ]; then
+        printf "ok $1 - $2\n"
+        ((num_pass++))
+      else
+        not_ok "$i" "$name" "cmp: $cmp_result"
+      fi
+
+    else
+      not_ok "$i" "$name" "$out_file: no such file"
+    fi
+
+  else
+    not_ok "$i" "$name" "$err"
+  fi
+
+  # increment the counter
+  ((i++))
+
+done
+
+# count number of failing tests
+num_fail=$((num_test - num_pass))
+
+# print result summary
+echo "# tests $num_test"
+echo "# pass  $num_pass"
+echo "# fail  $num_fail"
+
+# exit with a non-zero exit code if some tests failed
+if [ "$num_fail" -ne 0 ]; then
+  exit 1
+fi
