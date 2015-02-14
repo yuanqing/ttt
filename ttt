@@ -143,23 +143,25 @@ fi
 rm -rf "$actual_dir"
 mkdir -p "$actual_dir"
 
-# print TAP version
-__printf "TAP version 13\n"
-
 # store input file names in $input_files
-num_test=0
+num_tests=0
 for input_file in "$input_dir"/*"$input_ext"; do
 
   # only include files
   if [ -f "$input_file" ]; then
-    input_files["$num_test"]="$input_file"
-    ((num_test++))
+    input_files["$num_tests"]="$input_file"
+    ((num_tests++))
   fi
 
 done
 
-# print TAP plan
-__printf "1..$num_test\n"
+# exit if no tests in $input_dir
+if [ "$num_tests" -eq 0 ]; then
+  __error "$input_dir: no input files found"
+fi
+
+# print TAP version and plan
+__printf "TAP version 13\n"
 
 # count passing tests
 num_pass=0
@@ -217,10 +219,10 @@ for input_file in "${input_files[@]}"; do
 done
 
 # count failing tests
-num_fail=$((num_test - num_pass))
+num_fail=$((num_tests - num_pass))
 
 # print result summary
-__printf "# tests $num_test\n"
+__printf "# tests $num_tests\n"
 __printf "# pass  $num_pass\n"
 __printf "# fail  $num_fail\n"
 
