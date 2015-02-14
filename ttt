@@ -1,6 +1,6 @@
 #!/bin/bash
 
-_printf() {
+__printf() {
 
   # only print if $silent is unset
   if [ -z "$silent" ]; then
@@ -9,7 +9,7 @@ _printf() {
 
 }
 
-_usage() {
+__usage() {
 
   printf "Usage: $0"
   printf " [-i input_dir]"
@@ -21,17 +21,17 @@ _usage() {
 
 }
 
-_error() {
+__error() {
 
   printf "$0: $1\n"
   if [ -n "$2" ]; then
-    _usage
+    __usage
   fi
   exit 1
 
 }
 
-_normalise_dir() {
+__normalise_dir() {
 
   # set to the default if unset
   local dir=${1:-"$2"}
@@ -41,7 +41,7 @@ _normalise_dir() {
 
 }
 
-_normalise_ext() {
+__normalise_ext() {
 
   # set to the default if unset
   if [ -z "$1" ]; then
@@ -52,10 +52,10 @@ _normalise_ext() {
 
 }
 
-not_ok() {
+__not_ok() {
 
   local err="$3"
-  _printf "not ok $1 - $2\n  ---\n  error: "
+  __printf "not ok $1 - $2\n  ---\n  error: "
 
   # check if $err spans multiple lines
   if [ $(echo "$err" | wc -l) -gt 1 ]; then
@@ -63,11 +63,11 @@ not_ok() {
     err=${err/
 /
     }
-    _printf "|\n    $err\n";
+    __printf "|\n    $err\n";
   else
-    _printf "'$err'\n"
+    __printf "'$err'\n"
   fi
-  _printf "  ...\n"
+  __printf "  ...\n"
 
 }
 
@@ -82,7 +82,7 @@ while [ "$#" -gt 0 ]; do
       -i | -I | -o | -O | -a)
         # check that a value was specified after the flag
         if [ -z "$2" ] || [[ "$2" == -* ]]; then
-          _error "option $1 expects a value"
+          __error "option $1 expects a value"
         fi
         case "$1" in
           -i) input_dir="$2";;
@@ -101,7 +101,7 @@ while [ "$#" -gt 0 ]; do
       *)
         if [ "$1" == "--" ]; then
           if [ -z "$2" ]; then
-            _error "need a run command" 1
+            __error "need a run command" 1
           fi
           run_cmd="$2"
           shift
@@ -121,22 +121,22 @@ done
 
 # exit if no run command
 if [ -z "$run_cmd" ]; then
-  _error "need a run command" 1
+  __error "need a run command" 1
 fi
 
 # normalise options
-input_dir=$(_normalise_dir "$input_dir" "input")
-input_ext=$(_normalise_ext "$input_ext")
-output_dir=$(_normalise_dir "$output_dir" "output")
-output_ext=$(_normalise_ext "$output_ext")
-actual_dir=$(_normalise_dir "$actual_dir" "actual")
+input_dir=$(__normalise_dir "$input_dir" "input")
+input_ext=$(__normalise_ext "$input_ext")
+output_dir=$(__normalise_dir "$output_dir" "output")
+output_ext=$(__normalise_ext "$output_ext")
+actual_dir=$(__normalise_dir "$actual_dir" "actual")
 
 # exit if $input_dir or $output_dir not found
 if [ ! -d "$input_dir" ]; then
-  _error "$input_dir: no such directory"
+  __error "$input_dir: no such directory"
 fi
 if [ ! -d "$output_dir" ]; then
-  _error "$output_dir: no such directory"
+  __error "$output_dir: no such directory"
 fi
 
 # empty $actual_dir
@@ -144,7 +144,7 @@ rm -rf "$actual_dir"
 mkdir -p "$actual_dir"
 
 # print TAP version
-_printf "TAP version 13\n"
+__printf "TAP version 13\n"
 
 # store input file names in $input_files
 num_test=0
@@ -159,7 +159,7 @@ for input_file in "$input_dir"/*"$input_ext"; do
 done
 
 # print TAP plan
-_printf "1..$num_test\n"
+__printf "1..$num_test\n"
 
 # count passing tests
 num_pass=0
@@ -197,18 +197,18 @@ for input_file in "${input_files[@]}"; do
 
       # check if $cmp_result is empty
       if [ -z "$cmp_result" ]; then
-        _printf "ok $i - $test_name\n"
+        __printf "ok $i - $test_name\n"
         ((num_pass++))
       else
-        not_ok "$i" "$test_name" "$cmp_result"
+        __not_ok "$i" "$test_name" "$cmp_result"
       fi
 
     else
-      not_ok "$i" "$test_name" "$output_file: no such file"
+      __not_ok "$i" "$test_name" "$output_file: no such file"
     fi
 
   else
-    not_ok "$i" "$test_name" "$err"
+    __not_ok "$i" "$test_name" "$err"
   fi
 
   # increment counter
@@ -220,9 +220,9 @@ done
 num_fail=$((num_test - num_pass))
 
 # print result summary
-_printf "# tests $num_test\n"
-_printf "# pass  $num_pass\n"
-_printf "# fail  $num_fail\n"
+__printf "# tests $num_test\n"
+__printf "# pass  $num_pass\n"
+__printf "# fail  $num_fail\n"
 
 # exit with code 1 if some tests failed
 if [ "$num_fail" -ne 0 ]; then
