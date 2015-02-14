@@ -21,7 +21,7 @@ __usage() {
 
 }
 
-__error() {
+__fail() {
 
   printf "$0: $1\n"
   if [ -n "$2" ]; then
@@ -82,7 +82,7 @@ while [ "$#" -gt 0 ]; do
       -i | -I | -o | -O | -a)
         # check that a value was specified after the flag
         if [ -z "$2" ] || [[ "$2" == -* ]]; then
-          __error "option $1 expects a value"
+          __fail "option $1 expects a value"
         fi
         case "$1" in
           -i) input_dir="$2";;
@@ -101,7 +101,7 @@ while [ "$#" -gt 0 ]; do
       *)
         if [ "$1" == "--" ]; then
           if [ -z "$2" ]; then
-            __error "need a run command" 1
+            __fail "need a run command" 1
           fi
           run_cmd="$2"
           shift
@@ -119,9 +119,9 @@ while [ "$#" -gt 0 ]; do
 
 done
 
-# exit if no run command
+# fail if no run command
 if [ -z "$run_cmd" ]; then
-  __error "need a run command" 1
+  __fail "need a run command" 1
 fi
 
 # normalise options
@@ -131,12 +131,12 @@ output_dir=$(__normalise_dir "$output_dir" "output")
 output_ext=$(__normalise_ext "$output_ext")
 actual_dir=$(__normalise_dir "$actual_dir" "actual")
 
-# exit if $input_dir or $output_dir not found
+# fail if $input_dir or $output_dir not found
 if [ ! -d "$input_dir" ]; then
-  __error "$input_dir: no such directory"
+  __fail "$input_dir: no such directory"
 fi
 if [ ! -d "$output_dir" ]; then
-  __error "$output_dir: no such directory"
+  __fail "$output_dir: no such directory"
 fi
 
 # empty $actual_dir
@@ -155,9 +155,9 @@ for input_file in "$input_dir"/*"$input_ext"; do
 
 done
 
-# exit if no tests in $input_dir
+# fail if no input files in $input_dir
 if [ "$num_tests" -eq 0 ]; then
-  __error "$input_dir: no input files found"
+  __fail "$input_dir: no input files found"
 fi
 
 # print TAP version and plan
