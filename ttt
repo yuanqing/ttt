@@ -11,19 +11,13 @@ __printf() {
 
 __usage() {
 
-  printf "Usage: $0"
-  printf " [-i input_dir]"
-  printf " [-I input_ext]"
-  printf " [-o output_dir]"
-  printf " [-O output_ext]"
-  printf " [-s]"
-  printf " -- run_cmd\n"
+  echo "Usage: $0 [-i input_dir] [-I input_ext] [-o output_dir] [-O output_ext] [-s] -- run_cmd" 1>&2
 
 }
 
 __fail() {
 
-  printf "$0: $1\n"
+  printf "$0: $1\n" 1>&2
   if [ -n "$2" ]; then
     __usage
   fi
@@ -71,6 +65,13 @@ __not_ok() {
 
 }
 
+__str_starts_with() {
+  case $1 in
+    $2*) echo 1;;
+    *) echo;;
+  esac
+}
+
 # parse command line arguments
 while [ "$#" -gt 0 ]; do
 
@@ -81,8 +82,8 @@ while [ "$#" -gt 0 ]; do
       # flag options with value
       -i | -I | -o | -O | -a)
         # check that a value was specified after the flag
-        if [ -z "$2" ] || [[ "$2" == -* ]]; then
-          __fail "option $1 expects a value"
+        if [ -z "$2" ] || [ -n "$(__str_starts_with $2 '-')" ]; then
+          __fail "$1: option expects a value"
         fi
         case "$1" in
           -i) input_dir="$2";;
@@ -133,10 +134,10 @@ actual_dir=$(__normalise_dir "$actual_dir" "actual")
 
 # fail if $input_dir or $output_dir not found
 if [ ! -d "$input_dir" ]; then
-  __fail "$input_dir: no such directory"
+  __fail "$input_dir: no such input directory"
 fi
 if [ ! -d "$output_dir" ]; then
-  __fail "$output_dir: no such directory"
+  __fail "$output_dir: no such output directory"
 fi
 
 # empty $actual_dir
