@@ -1,4 +1,4 @@
-# ttt [![Version](https://img.shields.io/badge/version-v0.0.0-orange.svg?style=flat)](https://github.com/yuanqing/ttt/releases) [![Build Status](https://img.shields.io/travis/yuanqing/ttt.svg?branch=master&style=flat)](https://travis-ci.org/yuanqing/ttt)
+# ttt [![Version](https://img.shields.io/badge/version-v0.1.0-orange.svg?style=flat)](https://github.com/yuanqing/ttt/releases) [![Build Status](https://img.shields.io/travis/yuanqing/ttt.svg?branch=master&style=flat)](https://travis-ci.org/yuanqing/ttt)
 
 > A [TAP](http://testanything.org/)-compliant Bash utility for testing programs that read from `stdin` and write to&nbsp;`stdout`.
 
