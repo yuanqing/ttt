@@ -1,26 +1,23 @@
 #!/bin/bash
 
-__printf() {
-
-  # only print if $silent is unset
-  if [ -z "$silent" ]; then
-    printf "$@"
-  fi
-
-}
-
 __usage() {
 
-  echo "Usage: $0 [-i input_dir] [-I input_ext] [-o output_dir] [-O output_ext] [-s] -- run_cmd" 1>&2
+  # pipe `stdout` to `stderr`
+  echo "Usage: $0 [-i input_dir] [-I input_ext] [-o output_dir] [-O output_ext] -- run_cmd" 1>&2
 
 }
 
-__fail() {
+__error() {
 
-  printf "$0: $1\n" 1>&2
+  # pipe `stdout` to `stderr`
+  echo "$0: $1" 1>&2
+
+  # print usage message if $2 is set
   if [ -n "$2" ]; then
     __usage
   fi
+
+  # exit with code 1
   exit 1
 
 }
@@ -48,28 +45,30 @@ __normalise_ext() {
 
 __not_ok() {
 
-  local err="$3"
-  __printf "not ok $1 - $2\n  ---\n  error: "
+  local msg="$3"
+  printf "not ok $1 - $2\n  ---\n  error: "
 
-  # check if $err spans multiple lines
-  if [ $(echo "$err" | wc -l) -gt 1 ]; then
-    err=${err/	/  }
-    err=${err/
+  # check if $msg spans multiple lines
+  if [ $(echo "$msg" | wc -l) -gt 1 ]; then
+    msg=${msg/	/  }
+    msg=${msg/
 /
     }
-    __printf "|\n    $err\n";
+    printf "|\n    $msg\n";
   else
-    __printf "'$err'\n"
+    printf "'$msg'\n"
   fi
-  __printf "  ...\n"
+  printf "  ...\n"
 
 }
 
 __str_starts_with() {
-  case $1 in
-    $2*) echo 1;;
+
+  case "$1" in
+    "$2"*) echo 1;;
     *) echo;;
   esac
+
 }
 
 # parse command line arguments
@@ -83,7 +82,7 @@ while [ "$#" -gt 0 ]; do
       -i | -I | -o | -O | -a)
         # check that a value was specified after the flag
         if [ -z "$2" ] || [ -n "$(__str_starts_with $2 '-')" ]; then
-          __fail "$1: option expects a value"
+          __error "$1: option expects a value"
         fi
         case "$1" in
           -i) input_dir="$2";;
@@ -94,15 +93,11 @@ while [ "$#" -gt 0 ]; do
         esac
         shift
         ;;
-      # flag options without value
-      -s)
-        silent=1
-        ;;
       # non-flag options
       *)
         if [ "$1" == "--" ]; then
           if [ -z "$2" ]; then
-            __fail "need a run command" 1
+            __error "need a run command" 1
           fi
           run_cmd="$2"
           shift
@@ -122,7 +117,7 @@ done
 
 # fail if no run command
 if [ -z "$run_cmd" ]; then
-  __fail "need a run command" 1
+  __error "need a run command" 1
 fi
 
 # normalise options
@@ -134,10 +129,10 @@ actual_dir=$(__normalise_dir "$actual_dir" "actual")
 
 # fail if $input_dir or $output_dir not found
 if [ ! -d "$input_dir" ]; then
-  __fail "$input_dir: no such input directory"
+  __error "$input_dir: no such input directory"
 fi
 if [ ! -d "$output_dir" ]; then
-  __fail "$output_dir: no such output directory"
+  __error "$output_dir: no such output directory"
 fi
 
 # empty $actual_dir
@@ -158,11 +153,11 @@ done
 
 # fail if no input files in $input_dir
 if [ "$num_tests" -eq 0 ]; then
-  __fail "$input_dir: no input files found"
+  __error "$input_dir: no input files found"
 fi
 
 # print TAP version and plan
-__printf "TAP version 13\n"
+printf "TAP version 13\n"
 
 # count passing tests
 num_pass=0
@@ -200,7 +195,7 @@ for input_file in "${input_files[@]}"; do
 
       # check if $cmp_result is empty
       if [ -z "$cmp_result" ]; then
-        __printf "ok $i - $test_name\n"
+        printf "ok $i - $test_name\n"
         ((num_pass++))
       else
         __not_ok "$i" "$test_name" "$cmp_result"
@@ -223,9 +218,9 @@ done
 num_fail=$((num_tests - num_pass))
 
 # print result summary
-__printf "# tests $num_tests\n"
-__printf "# pass  $num_pass\n"
-__printf "# fail  $num_fail\n"
+printf "# tests $num_tests\n"
+printf "# pass  $num_pass\n"
+printf "# fail  $num_fail\n"
 
 # exit with code 1 if some tests failed
 if [ "$num_fail" -ne 0 ]; then
