@@ -2,11 +2,11 @@ TAP version 13
 ok 1 - a
 not ok 2 - b
   ---
-  error: 'out/b.out actual/b.out differ: char 1, line 1'
+  error: 'output/b actual/b differ: byte 1, line 1'
   ...
 not ok 3 - c
   ---
-  error: 'out/c.out: no such file'
+  error: 'output/c: no such file'
   ...
 # tests 3
 # pass  1

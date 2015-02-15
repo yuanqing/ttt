@@ -8,8 +8,8 @@ ttt() {
 
 __errors() {
 
-  # check that exit code is non-zero
-  [ "$?" -ne 0 ]
+  # check that exit code is 1
+  [ "$?" -eq 1 ]
 
   # check that output ($1) ends with the error message ($2)
   case $1 in
