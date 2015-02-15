@@ -18,7 +18,7 @@ $ ls output
 bar       baz       qux
 ```
 
-In our example, there are three tests. Each test works like so:
+In our [example](https://github.com/yuanqing/ttt/tree/master/example), there are three tests. Each test works like so:
 
 1. The input file is fed to the program via `stdin`.
 2. The actual (via `stdout`) and expected outputs are compared; the test passes if and only if the two are *exactly the same*.
@@ -39,14 +39,14 @@ ok 3 - qux
 # fail  1
 ```
 
-Note that `ttt` exits with code `0` if and only if *every test passes*:
+Note that `ttt` exits with code `0` if and only if every test passes. Because the second test failed, `ttt` exits with code `1`:
 
 ```
 $ echo $?
 1
 ```
 
-For debugging, the program&rsquo;s actual output is stored in a directory named `actual`:
+For debugging, our program&rsquo;s actual output is stored in a directory named `actual`:
 
 ```
 $ ls
@@ -64,6 +64,29 @@ usage: ttt [-i input_dir] [-I input_ext] [-o output_dir] [-O output_ext] -- run_
 - `input_dir` and `output_dir` &mdash; Paths to the directories containing the input and output files. Defaults to `input` and `output` respectively.
 - `input_ext` and `output_ext` &mdash; The file extensions of the input and output files. Defaults to the empty string.
 - `run_cmd` &mdash; The command to invoke the program under test, eg. `./a.out` or `java Foo`.
+
+## Tests
+
+Run the [Roundup](https://github.com/bmizerany/roundup) tests like so:
+
+```
+$ cd test
+$ bash vendor/roundup.sh
+```
+
+## Installation
+
+To install `ttt` into `/usr/local/bin`, simply do:
+
+```
+$ curl -L https://raw.github.com/yuanqing/ttt/master/ttt -o /usr/local/bin/ttt
+$ chmod +x /usr/local/bin/ttt
+```
+
+## Changelog
+
+- 0.1.0
+  - Initial release
 
 ## License
 
