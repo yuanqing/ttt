@@ -18,16 +18,17 @@ $ ls output
 bar       baz       qux
 ```
 
-In our [example](https://github.com/yuanqing/ttt/tree/master/example), there are three tests. Each test works like so:
+In our [toy example](https://github.com/yuanqing/ttt/tree/master/example), there are three tests. Each test works like so:
 
 1. The input file is fed to the program via `stdin`.
-2. The actual (via `stdout`) and expected outputs are compared; the test passes if and only if the two are *exactly the same*.
+2. The actual output (via `stdout`) is compared with the expected output file; the test passes if and only if the two are *exactly the same*.
 
 To run the tests, simply do:
 
 ```
 $ gcc hello.c && ttt -- ./a.out
 TAP version 13
+1..3
 ok 1 - bar
 not ok 2 - baz
   ---
@@ -46,7 +47,7 @@ $ echo $?
 1
 ```
 
-For debugging, our program&rsquo;s actual output is stored in a directory named `actual`:
+For debugging, the program&rsquo;s actual output is stored in a directory named `actual`:
 
 ```
 $ ls
