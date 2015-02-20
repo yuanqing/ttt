@@ -158,6 +158,7 @@ fi
 
 # print TAP version and plan
 echo "TAP version 13"
+echo "1..$num_tests"
 
 # count passing tests
 num_pass=0
