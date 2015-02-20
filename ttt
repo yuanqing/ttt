@@ -54,11 +54,11 @@ __not_ok() {
     msg=${msg/
 /
     }
-    printf "|\n    $msg\n";
+    echo "|\n    $msg";
   else
-    printf "'$msg'\n"
+    echo "'$msg'"
   fi
-  printf "  ...\n"
+  echo "  ..."
 
 }
 
@@ -157,7 +157,7 @@ if [ "$num_tests" -eq 0 ]; then
 fi
 
 # print TAP version and plan
-printf "TAP version 13\n"
+echo "TAP version 13"
 
 # count passing tests
 num_pass=0
@@ -195,7 +195,7 @@ for input_file in "${input_files[@]}"; do
 
       # check if $cmp_result is empty
       if [ -z "$cmp_result" ]; then
-        printf "ok $i - $test_name\n"
+        echo "ok $i - $test_name"
         ((num_pass++))
       else
         __not_ok "$i" "$test_name" "$cmp_result"
@@ -218,9 +218,9 @@ done
 num_fail=$((num_tests - num_pass))
 
 # print result summary
-printf "# tests $num_tests\n"
-printf "# pass  $num_pass\n"
-printf "# fail  $num_fail\n"
+echo "# tests $num_tests"
+echo "# pass  $num_pass"
+echo "# fail  $num_fail"
 
 # exit with code 1 if some tests failed
 if [ "$num_fail" -ne 0 ]; then
