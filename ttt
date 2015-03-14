@@ -1,20 +1,20 @@
 #!/bin/bash
 
-__usage() {
+usage() {
 
   # pipe `stdout` to `stderr`
   echo "Usage: $0 [-i input_dir] [-I input_ext] [-o output_dir] [-O output_ext] -- run_cmd" 1>&2
 
 }
 
-__error() {
+error() {
 
   # pipe `stdout` to `stderr`
   echo "$0: $1" 1>&2
 
   # print usage message if $2 is set
   if [ -n "$2" ]; then
-    __usage
+    usage
   fi
 
   # exit with code 1
@@ -22,7 +22,7 @@ __error() {
 
 }
 
-__normalise_dir() {
+normalise_dir() {
 
   # set to the default if unset
   local dir=${1:-"$2"}
@@ -32,7 +32,7 @@ __normalise_dir() {
 
 }
 
-__normalise_ext() {
+normalise_ext() {
 
   # set to the default if unset
   if [ -z "$1" ]; then
@@ -43,14 +43,14 @@ __normalise_ext() {
 
 }
 
-__not_ok() {
+not_ok() {
 
   local msg="$3"
   printf "not ok $1 - $2\n  ---\n  error: "
 
   # check if $msg spans multiple lines
   if [ $(echo "$msg" | wc -l) -gt 1 ]; then
-    msg=${msg/	/  }
+    msg=${msg/  /  }
     msg=${msg/
 /
     }
@@ -62,7 +62,7 @@ __not_ok() {
 
 }
 
-__str_starts_with() {
+str_starts_with() {
 
   case "$1" in
     "$2"*) echo 1;;
@@ -79,17 +79,17 @@ while [ "$#" -gt 0 ]; do
 
     case "$1" in
       # flag options with value
-      -i | -I | -o | -O | -a)
+      -i | -o | -a | -I | -O)
         # check that a value was specified after the flag
-        if [ -z "$2" ] || [ -n "$(__str_starts_with $2 '-')" ]; then
-          __error "$1: option expects a value"
+        if [ -z "$2" ] || [ -n "$(str_starts_with $2 '-')" ]; then
+          error "$1: option expects a value"
         fi
         case "$1" in
           -i) input_dir="$2";;
-          -I) input_ext="$2";;
           -o) output_dir="$2";;
-          -O) output_ext="$2";;
           -a) actual_dir="$2";;
+          -I) input_ext="$2";;
+          -O) output_ext="$2";;
         esac
         shift
         ;;
@@ -97,7 +97,7 @@ while [ "$#" -gt 0 ]; do
       *)
         if [ "$1" == "--" ]; then
           if [ -z "$2" ]; then
-            __error "need a run command" 1
+            error "need a run command" 1
           fi
           run_cmd="$2"
           shift
@@ -117,22 +117,22 @@ done
 
 # fail if no run command
 if [ -z "$run_cmd" ]; then
-  __error "need a run command" 1
+  error "need a run command" 1
 fi
 
 # normalise options
-input_dir=$(__normalise_dir "$input_dir" "input")
-input_ext=$(__normalise_ext "$input_ext")
-output_dir=$(__normalise_dir "$output_dir" "output")
-output_ext=$(__normalise_ext "$output_ext")
-actual_dir=$(__normalise_dir "$actual_dir" "actual")
+input_dir=$(normalise_dir "$input_dir" "input")
+input_ext=$(normalise_ext "$input_ext")
+output_dir=$(normalise_dir "$output_dir" "output")
+output_ext=$(normalise_ext "$output_ext")
+actual_dir=$(normalise_dir "$actual_dir" "actual")
 
 # fail if $input_dir or $output_dir not found
 if [ ! -d "$input_dir" ]; then
-  __error "$input_dir: no such input directory"
+  error "$input_dir: no such input directory"
 fi
 if [ ! -d "$output_dir" ]; then
-  __error "$output_dir: no such output directory"
+  error "$output_dir: no such output directory"
 fi
 
 # empty $actual_dir
@@ -153,7 +153,7 @@ done
 
 # fail if no input files in $input_dir
 if [ "$num_tests" -eq 0 ]; then
-  __error "$input_dir: no input files found"
+  error "$input_dir: no input files found"
 fi
 
 # print TAP version and plan
@@ -199,15 +199,15 @@ for input_file in "${input_files[@]}"; do
         echo "ok $i - $test_name"
         ((num_pass++))
       else
-        __not_ok "$i" "$test_name" "$cmp_result"
+        not_ok "$i" "$test_name" "$cmp_result"
       fi
 
     else
-      __not_ok "$i" "$test_name" "$output_file: no such file"
+      not_ok "$i" "$test_name" "$output_file: no such file"
     fi
 
   else
-    __not_ok "$i" "$test_name" "$err"
+    not_ok "$i" "$test_name" "$err"
   fi
 
   # increment counter
