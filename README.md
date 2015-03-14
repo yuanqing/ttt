@@ -59,12 +59,18 @@ bar       baz       qux
 ## CLI
 
 ```
-usage: ttt [-i input_dir] [-I input_ext] [-o output_dir] [-O output_ext] -- run_cmd
+Usage: ./ttt [options] -- run_cmd
+  run_cmd: The command to invoke the program under test.
+  options:
+    -i INPUT_DIR   Path to the directory containing the input files.
+                   Default: './input'.
+    -o OUTPUT_DIR  Path to the directory containing the expected output
+                   files. Default: './output'.
+    -a ACTUAL_DIR  Path to the directory to write your program's output.
+                   Default: './actual'.
+    -I IN_EXT      The file extension of the input files.
+    -O OUT_EXT     The file extension of the expected output files.
 ```
-
-- `input_dir` and `output_dir` &mdash; Paths to the directories containing the input and output files. Defaults to `input` and `output` respectively.
-- `input_ext` and `output_ext` &mdash; The file extensions of the input and output files. Defaults to the empty string.
-- `run_cmd` &mdash; The command to invoke the program under test, eg. `./a.out` or `java Foo`.
 
 ## Tests
 
