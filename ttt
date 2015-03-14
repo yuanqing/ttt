@@ -3,7 +3,17 @@
 usage() {
 
   # pipe `stdout` to `stderr`
-  echo "Usage: $0 [-i input_dir] [-I input_ext] [-o output_dir] [-O output_ext] -- run_cmd" 1>&2
+  printf "Usage: $0 [options] -- run_cmd\n\
+  run_cmd: The command to invoke the program under test.\n\
+  options:\n\
+    -i INPUT_DIR   Path to the directory containing the input files.\n\
+                   Default: './input'.\n\
+    -o OUTPUT_DIR  Path to the directory containing the expected output\n\
+                   files. Default: './output'.\n\
+    -a ACTUAL_DIR  Path to the directory to write your program's output.\n\
+                   Default: './actual'.\n\
+    -I IN_EXT      The file extension of the input files.\n\
+    -O OUT_EXT     The file extension of the expected output files.\n" 1>&2
 
 }
 
