@@ -59,7 +59,7 @@ bar       baz       qux
 ## CLI
 
 ```
-Usage: ./ttt [options] -- run_cmd
+Usage: ttt [options] -- run_cmd
   run_cmd: The command to invoke the program under test.
   options:
     -i INPUT_DIR   Path to the directory containing the input files.
