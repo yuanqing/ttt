@@ -54,7 +54,7 @@ __not_ok() {
     msg=${msg/
 /
     }
-    echo "|\n    $msg";
+    printf "|\n    $msg\n";
   else
     echo "'$msg'"
   fi
